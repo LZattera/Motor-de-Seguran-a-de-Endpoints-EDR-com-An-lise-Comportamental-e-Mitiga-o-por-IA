@@ -1,0 +1,2 @@
+# Motor de Segurança de Endpoints (EDR) com Análise Comportamental e Mitigação por IA
+Este agente roda como um processo de sistema invisível, monitorando a rede e o sistema operacional para detectar tentativas de invasão, bloqueios de políticas (como instalações não autorizadas de pacotes/aplicativos) e exfiltração de dados, utilizando IA para analisar o tráfego e gerar scripts de defesa em tempo real.
