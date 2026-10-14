@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/EdrAgentMonitor.Tests/EdrAgentMonitor.Tests.csproj" />
+  </Folder>
+  <Project Path="EdrAgentMonitor.csproj" />
+</Solution>

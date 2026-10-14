@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-EdrAgentMonitor-e2932bb8-caa5-4b82-8f69-7ebc79271ad0</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.36.2" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.84.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.84.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="SharpPcap" Version="6.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Protos\edr_telemetry.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+  <!-- Testes e ferramentas de dev não fazem parte do binário do agente -->
+  <ItemGroup>
+    <Compile Remove="tests\**;scripts\**;certs\**" />
+    <None Remove="tests\**;certs\**" />
+    <Content Remove="tests\**;certs\**" />
+  </ItemGroup>
+</Project>

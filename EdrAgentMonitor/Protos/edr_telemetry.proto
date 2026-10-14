@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package edr.telemetry.v1;
+
+option csharp_namespace = "EdrAgentMonitor.Infrastructure.Grpc";
+
+import "google/protobuf/timestamp.proto";
+
+// Canal bidirecional persistente: o agente envia lotes de telemetria
+// e o servidor de análise (IA) devolve comandos de mitigação a qualquer momento.
+service EdrTelemetryService {
+  rpc StreamTelemetry (stream TelemetryBatch) returns (stream MitigationCommand);
+}
+
+// ---------- Agente -> Servidor ----------
+
+message TelemetryBatch {
+  string agent_id = 1;
+  string hostname = 2;
+  uint64 batch_sequence = 3;                 // Monotônico, para detectar perdas
+  google.protobuf.Timestamp sent_at = 4;
+  uint64 dropped_events = 5;                 // Total descartado pelo DropOldest
+
+  repeated NetworkLog network_logs = 10;
+  repeated ProcessLog process_logs = 11;
+}
+
+enum TransportProtocol {
+  TRANSPORT_PROTOCOL_UNSPECIFIED = 0;
+  TRANSPORT_PROTOCOL_TCP = 1;
+  TRANSPORT_PROTOCOL_UDP = 2;
+  TRANSPORT_PROTOCOL_OTHER = 3;
+}
+
+message NetworkLog {
+  google.protobuf.Timestamp timestamp = 1;
+  string source_ip = 2;
+  string destination_ip = 3;
+  uint32 source_port = 4;                    // proto3 não tem uint16
+  uint32 destination_port = 5;
+  TransportProtocol protocol = 6;
+}
+
+message ProcessLog {
+  google.protobuf.Timestamp timestamp = 1;
+  int32 process_id = 2;
+  int32 parent_process_id = 3;
+  string process_name = 4;
+  string image_path = 5;
+  string command_line = 6;
+}
+
+// ---------- Servidor -> Agente ----------
+
+// Envelope assinado. O agente verifica a assinatura sobre os BYTES EXATOS de
+// `payload` antes de deserializá-lo (evita ambiguidade de serialização entre linguagens).
+message MitigationCommand {
+  bytes payload = 1;                         // MitigationPayload serializado
+  bytes signature = 2;                       // ECDSA P-256 / SHA-256, formato DER (RFC 3279)
+  string key_id = 3;                         // Identifica a chave pública (permite rotação)
+}
+
+// Conteúdo assinado pelo backend de IA.
+message MitigationPayload {
+  string command_id = 1;                     // Nonce único (anti-replay + auditoria)
+  string target_agent_id = 2;                // Impede reutilizar o comando em outro host
+  string powershell_script = 3;
+  string reason = 4;                         // Justificativa da IA
+  int32 target_process_id = 5;               // 0 = não se aplica
+  google.protobuf.Timestamp issued_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+}
