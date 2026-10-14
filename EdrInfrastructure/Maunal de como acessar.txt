@@ -1,0 +1,13 @@
+Subir os contêineres em background:
+
+Bash
+docker-compose up -d
+Baixar o modelo de IA:
+O contêiner do Ollama sobe vazio. Para fazer o download de um modelo extremamente rápido para geração de código (Microsoft Phi-3), execute:
+
+Bash
+docker exec -it edrinfrastructure-ollama-1 ollama run phi3
+(Nota: O nome do contêiner edrinfrastructure-ollama-1 pode variar dependendo do nome da pasta. Use docker ps para confirmar o nome exato se o comando falhar).
+
+Acessar os serviços:
+Abra o navegador no notebook e acesse http://localhost:5678. Isso abrirá a tela inicial do n8n para você criar a conta de administrador local (gratuita) e ter acesso à interface de criação dos fluxos visuais.

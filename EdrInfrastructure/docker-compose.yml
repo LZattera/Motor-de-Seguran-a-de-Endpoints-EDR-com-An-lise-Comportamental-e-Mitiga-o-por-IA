@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # 1. Mensageria: Redpanda (Clone do Kafka ultra-leve em C++)
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+      - "9092:9092"
+    networks:
+      - edr_net
+
+  # 2. Banco de Dados: PostgreSQL com suporte a vetores (RAG)
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: edrpassword
+      POSTGRES_DB: edr_db
+    ports:
+      - "5432:5432"
+    networks:
+      - edr_net
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # 3. IA Local: Ollama
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - edr_net
+    volumes:
+      - ollama_data:/root/.ollama
+
+  # 4. Orquestrador: n8n
+  n8n:
+    image: n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - OLLAMA_HOST=http://ollama:11434 # Permite que o n8n acesse o Ollama na rede interna do Docker
+    networks:
+      - edr_net
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+      - ollama
+
+networks:
+  edr_net:
+    driver: bridge
+
+volumes:
+  pg_data:
+  ollama_data:
+  n8n_data:
